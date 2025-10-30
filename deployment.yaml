@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: country-service
-          image: trabelsiaziz/counrty_service:latest
+          image: trabelsiaziz/country-service:4
           ports:
             - containerPort: 8082
