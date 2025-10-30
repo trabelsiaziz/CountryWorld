@@ -13,25 +13,34 @@ pipeline {
             }
         }
 
-        stage('Compile, Test, Package') {
+        stage('Build maven') {
             steps {
                 sh 'mvn clean install'
             }
-            post {
-                success {
-                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-                }
-            }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Build Dockerfile') {
             steps {
-                withSonarQubeEnv(installationName: 'MySonarQubeServer', credentialsId: 'sonarqubePWD') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=country-service -Dsonar.projectName=country-service"
+                sh 'docker build . -t my-country-service:$BUILD_NUMBER'
+
+                withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                    sh 'docker login -u trabelsiaziz -p ${dockerhubpwd}'
                 }
+
+                sh 'docker tag my-country-service:$BUILD_NUMBER trabelsiaziz/my-country-service:$BUILD_NUMBER'
+                sh 'docker push trabelsiaziz/my-country-service:$BUILD_NUMBER'
             }
         }
 
-
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    kubeconfig(credentialsId: 'kubeconfig-file', serverUrl: '') {
+                        sh 'kubectl apply -f deployment.yaml'
+                        sh 'kubectl apply -f service.yaml'
+                    }
+                }
+            }
+        }
     }
 }

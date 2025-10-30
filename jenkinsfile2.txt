@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'M2_HOME'
+    }
+
+    stages {
+
+        stage('Checkout code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/trabelsiaziz/CountryWorld.git'
+            }
+        }
+
+        stage('Compile, Test, Package') {
+            steps {
+                sh 'mvn clean install'
+            }
+            post {
+                success {
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv(installationName: 'MySonarQubeServer', credentialsId: 'sonarqubePWD') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=country-service -Dsonar.projectName=country-service"
+                }
+            }
+        }
+
+
+    }
+}
