@@ -20,21 +20,21 @@
       docker_image:
         build:
           path: "{{ dockerfile_path }}"
-        name: "{{ docker_registry_username }}/{{ image_name }}"
+        name: "{{ docker_registry_username }}/{{ image_name }}:{{ image_tag }}"
         source: build
         state: present
         tag: "{{ image_tag }}"
 
     - name: Push the Docker image to Docker Hub
       docker_image:
-        name: "{{ docker_registry_username }}/{{ image_name }}"
+        name: "{{ docker_registry_username }}/{{ image_name }}:{{ image_tag }}"
         tag: "{{ image_tag }}"
         push: yes
         source: local
 
     - name: Pull Docker image (optional)
       docker_image:
-        name: "{{ docker_registry_username }}/{{ image_name }}"
+        name: "{{ docker_registry_username }}/{{ image_name }}:{{ image_tag }}"
         tag: "{{ image_tag }}"
         source: pull
 
